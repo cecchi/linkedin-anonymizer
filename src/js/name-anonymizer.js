@@ -21,12 +21,13 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
     NameAnonymizer.prototype.identify = function() {
         var self = this,
             selectors = [
-                'a[href^="https://www.linkedin.com/profile/view"][href$="-name"]:not(.title):not([data-trk$="-title"])',
-                'a[href^="https://www.linkedin.com/profile/view"].name',
-                '.name a[href^="https://www.linkedin.com/profile/view"]',
+                'a[href*="://www.linkedin.com/profile/view"][href$="-name"]:not(.title):not([data-trk$="-title"])',
+                'a[href*="://www.linkedin.com/profile/view"].name',
+                '.name a[href*="://www.linkedin.com/profile/view"]',
                 'a[href^="/contacts/view"]',
                 '.profile-detail .name',
                 '.full-name',
+                '.intermediary-name',
                 '.new-miniprofile-container a'
             ],
             elements = document.querySelectorAll(selectors.join(','));

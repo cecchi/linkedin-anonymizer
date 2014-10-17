@@ -23,7 +23,7 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
     PhotoAnonymizer.prototype.identify = function() {
         var self = this,
             selectors = [
-                'a[href^="https://www.linkedin.com/profile/view"] img',
+                'a[href*="://www.linkedin.com/profile/view"] img',
                 'a[href^="/contacts/view"] img',
                 '.new-miniprofile-container img',
                 '.profile-picture img',
