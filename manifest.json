@@ -1,0 +1,23 @@
+{
+  "manifest_version": 2,
+  "name": "LinkedIn Anonymizer",
+  "version": "0.0.0",
+  "author": "Cecchi MacNaughton <cecchi@linkedin.com>",
+  "description": "Obfuscate sensitive member data on LinkedIn.com",
+  "permissions": [
+    "*://*.linkedin.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.linkedin.com/*"
+      ],
+      "js": [
+        "build/anonymizer.js"
+      ],
+      "css": [
+        "build/anonymizer.css"
+      ]
+    }
+  ]
+}

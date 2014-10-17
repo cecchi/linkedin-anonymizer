@@ -1,0 +1,11 @@
+# Misc
+.DS_Store
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Compiled code
+build
+
+# Dependencies
+node_modules
