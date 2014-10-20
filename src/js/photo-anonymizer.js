@@ -13,6 +13,7 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
         this.chance = new Chance();
     };
     PhotoAnonymizer.prototype = Object.create(new Anonymizer());
+    PhotoAnonymizer.prototype.constructor = PhotoAnonymizer;
 
     /**
      * Identify elements of interest to anonymize
@@ -29,7 +30,8 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
                 '.profile-picture img',
                 '.larger-profile-photo img',
                 'img.profile-pic',
-                '.more-bar img'
+                '.more-bar img',
+                '#notifications .update .photo img',
             ],
             elements = document.querySelectorAll(selectors.join(','));
 
@@ -118,7 +120,6 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
                 'max' : 183
             }),
             value    = replacement ? replacement : (base + '/' + size + '/' + random + '.png');
-
 
         element.setAttribute('src', '');
         element.setAttribute('src', value);

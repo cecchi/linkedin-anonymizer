@@ -8,8 +8,6 @@ define(function() {
      */
     function Anonymizer() {
         this.observer = null;
-
-        this.transformationMap = {};
     };
 
     /**
@@ -120,8 +118,6 @@ define(function() {
      */
     Anonymizer.prototype.watch = function(element) {
         var self = this;
-
-        console.log('Initializing DOM observer...');
 
         if(this.observer) {
             this.observer.disconnect();

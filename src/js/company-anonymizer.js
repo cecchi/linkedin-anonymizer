@@ -1,17 +1,17 @@
 define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
 
     /**
-     * Interface for anonymizing names
+     * Interface for anonymizing companies
      *
-     * @class   NameAnonymizer
+     * @class   CompanyAnonymizer
      * @extends Anonymizer
      * @constructor
      */
-    function NameAnonymizer() {
+    function CompanyAnonymizer() {
         this.chance = new Chance();
     };
-    NameAnonymizer.prototype = Object.create(new Anonymizer());
-    NameAnonymizer.prototype.constructor = NameAnonymizer;
+    CompanyAnonymizer.prototype = Object.create(new Anonymizer());
+    CompanyAnonymizer.prototype.constructor = CompanyAnonymizer;
 
     /**
      * Identify elements of interest to anonymize
@@ -19,20 +19,12 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      * @method  identify
      * @return  {Array}
      */
-    NameAnonymizer.prototype.identify = function() {
+    CompanyAnonymizer.prototype.identify = function() {
         var self = this,
             selectors = [
-                'a[href*="://www.linkedin.com/profile/view"][href$="name"]:not(.title):not([data-trk$="title"])',
-                'a[href*="://www.linkedin.com/profile/view"].name',
-                '.name a[href*="://www.linkedin.com/profile/view"]',
-                'a[href^="/contacts/view"]',
-                '.search-results h3 .title',
-                '#notifications .update .name',
-                '.profile-detail .name',
-                '.inbox-item .participants',
-                '.full-name',
-                '.intermediary-name',
-                '.new-miniprofile-container a'
+                'a[href^="/company/"]',
+                'a[href^="/vsearch/p?company="]',
+                '[itemtype="http://schema.org/Corporation"]'
             ],
             elements = document.querySelectorAll(selectors.join(','));
 
@@ -56,7 +48,7 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      * @param   {Node}  node    The element to search
      * @return  {String|false}
      */
-    NameAnonymizer.prototype.findFirstNonEmptyTextNode = function(node) {
+    CompanyAnonymizer.prototype.findFirstNonEmptyTextNode = function(node) {
         var found;
 
         if(node.nodeType === 3 && node.textContent.trim().length > 0) {
@@ -72,7 +64,7 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
             }
         }
 
-        throw new Error('NameAnonymizer.prototype.findFirstNonEmptyTextNode could not find a valid text node.');
+        throw new Error('CompanyAnonymizer.prototype.findFirstNonEmptyTextNode could not find a valid text node.');
     };
 
     /**
@@ -82,12 +74,12 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      * @param   {Node}          element         The element to identify
      * @return  {String}
      */
-    NameAnonymizer.prototype.generateSeed = function(element) {
+    CompanyAnonymizer.prototype.generateSeed = function(element) {
         return this.findFirstNonEmptyTextNode(element).textContent.trim().toLowerCase();
     };
 
     /**
-     * Anonymizes a single name
+     * Anonymizes a single company
      *
      * @method  anonymizeElement
      * @param   {Node}          element         The element to transform
@@ -95,20 +87,12 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      *                                          (i.e. an element with the same value from `generateSeed`)
      * @return  {String|false}
      */
-    NameAnonymizer.prototype.anonymizeElement = function(element, replacement) {
+    CompanyAnonymizer.prototype.anonymizeElement = function(element, replacement) {
         var node   = this.findFirstNonEmptyTextNode(element),
             name   = node.textContent.trim(),
             value  = replacement ? replacement : this.chance.name(),
             prefix = node.textContent.match(/^\s/) ? ' ' : ''; // Preserve leading whitespace
             suffix = node.textContent.match(/\s$/) ? ' ' : ''; // Preserve trailing whitespace
-
-        // If it has any spaces, assume it's a full name and add a mapping for the first name
-        if(!replacement && name.indexOf(' ')) {
-            this.setMapping(
-                name.split(' ')[0].toLowerCase(),
-                value.split(' ')[0]
-            );
-        }
 
         // Update text content
         node.textContent = prefix + value + suffix;
@@ -116,5 +100,5 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
         return value;
     };
 
-    return NameAnonymizer;
+    return CompanyAnonymizer;
 });
