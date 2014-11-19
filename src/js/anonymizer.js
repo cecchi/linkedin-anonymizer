@@ -75,6 +75,26 @@ define(function() {
     };
 
     /**
+     * Returns all current transformations
+     * Warning: Incredibly inefficient
+     *
+     * @method  getAllMappings
+     * @return  {Array}
+     */
+    Anonymizer.prototype.getAllMappings = function() {
+        var ns  = this.constructor.name.toLowerCase(),
+            map = {};
+
+        for(i in localStorage) {
+            if(new RegExp('^' + ns + '.').test(i)) {
+                map[i.replace(ns + '.', '')] = localStorage.getItem(i);
+            }
+        }
+
+        return map;
+    };
+
+    /**
      * Anonymizes all identified elements
      *
      * @method  anonymize
@@ -100,8 +120,7 @@ define(function() {
 
                 if(mapped) {
                     self.anonymizeElement(element, mapped);
-                } else {
-                    anonymized = self.anonymizeElement(element);
+                } else if(anonymized = self.anonymizeElement(element)) {
                     self.setMapping(original, anonymized);
                 }
 

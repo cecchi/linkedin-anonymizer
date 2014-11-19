@@ -14,6 +14,7 @@ require.config({
     //file should be skipped because it has no dependencies.
     'paths' : {
         'require-lib' : 'lib/require',
+        'underscore'  : 'lib/underscore',
         'chance'      : 'lib/chance'
     },
 

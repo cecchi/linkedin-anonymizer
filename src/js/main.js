@@ -6,7 +6,7 @@ define(['photo-anonymizer', 'name-anonymizer', 'company-anonymizer'], function(P
     new NameAnonymizer().run();
 
     // Anonymize companies
-    new CompanyAnonymizer().run();
+    // new CompanyAnonymizer().run();
 
     // Show the body
     document.querySelector('body').setAttribute('style', 'visibility: visible !important');

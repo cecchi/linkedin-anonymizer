@@ -1,4 +1,4 @@
-define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
+define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, Chance, Names) {
 
     /**
      * Interface for anonymizing names
@@ -9,7 +9,13 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      */
     function NameAnonymizer() {
         this.chance = new Chance();
+
+        this.chance.set('firstNames', {
+            'male'   : Names,
+            'female' : Names
+        });
     };
+
     NameAnonymizer.prototype = Object.create(new Anonymizer());
     NameAnonymizer.prototype.constructor = NameAnonymizer;
 
@@ -24,7 +30,13 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
             selectors = [
                 'a[href*="://www.linkedin.com/profile/view"][href$="name"]:not(.title):not([data-trk$="title"])',
                 'a[href*="://www.linkedin.com/profile/view"].name',
+                'a[href^="/recruiter/profile"]',
+                '.inside-opinion-request .recipient-name',
+                '.inside-opinion-request #subject',
+                '.inside-opinion-request #msgBody',
+                '#recruiter-inside-opinion .take-action button',
                 '.name a[href*="://www.linkedin.com/profile/view"]',
+                '.profile-info > h1.searchable',
                 'a[href^="/contacts/view"]',
                 '.search-results h3 .title',
                 '#notifications .update .name',
@@ -32,15 +44,16 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
                 '.inbox-item .participants',
                 '.full-name',
                 '.intermediary-name',
-                '.new-miniprofile-container a'
+                '.new-miniprofile-container a',
+                '#sendInMailModal .recipient'
             ],
             elements = document.querySelectorAll(selectors.join(','));
 
         return Array.prototype.slice.call(elements)
             .filter(function(node) {
-                // Filter nodes that do not have a valid text node
+                // Filter nodes that do not have valid content to replace
                 try {
-                    self.findFirstNonEmptyTextNode(node);
+                    self.getContent(node);
                 } catch(e) {
                     return false;
                 }
@@ -50,11 +63,24 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
     };
 
     /**
+     * Determines whether to treat an element as a freeform text replacement
+     *
+     * @method  isFreeform
+     * @param   {Node}  node    The element to inspect
+     * @retunr  {Boolean}
+     */
+    NameAnonymizer.prototype.isFreeform = function(element) {
+        var id = element.getAttribute('id');
+
+        return id === 'subject' || id === 'msgBody' || element.tagName.toLowerCase() === 'button';
+    };
+
+    /**
      * Gets the first non-empty text node descendant of an element
      *
      * @method  findFirstNonEmptyTextNode
      * @param   {Node}  node    The element to search
-     * @return  {String|false}
+     * @return  {String}
      */
     NameAnonymizer.prototype.findFirstNonEmptyTextNode = function(node) {
         var found;
@@ -76,6 +102,43 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
     };
 
     /**
+     * Returns the text content of an element, or the value of an input
+     *
+     * @method  getContent
+     * @param   {Node}  node    The element to search
+     * @return  {String|false}
+     */
+    NameAnonymizer.prototype.getContent = function(element, trim) {
+        var node,
+            content;
+
+        if(element.tagName.toLowerCase() === 'input') {
+            content = element.value || element.getAttribute('placeholder') || '';
+        } else {
+            content = this.findFirstNonEmptyTextNode(element).textContent;
+        }
+
+        return trim ? content.trim() : content;
+    };
+
+    /**
+     * Sets the text content of an element, or the value of an input
+     *
+     * @method  setContent
+     * @param   {Node}  node    The element to modify
+     * @return  {NameAnonymizer}
+     */
+    NameAnonymizer.prototype.setContent = function(element, content) {
+        if(element.tagName.toLowerCase() === 'input') {
+            element.value = content;
+        } else {
+            this.findFirstNonEmptyTextNode(element).textContent = content;
+        }
+
+        return this;
+    };
+
+    /**
      * Generates a unique string identifier for a given element (for repeatable replacement)
      *
      * @method  generateSeed
@@ -83,7 +146,7 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      * @return  {String}
      */
     NameAnonymizer.prototype.generateSeed = function(element) {
-        return this.findFirstNonEmptyTextNode(element).textContent.trim().toLowerCase();
+        return this.getContent(element, true).toLowerCase();
     };
 
     /**
@@ -96,22 +159,46 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
      * @return  {String|false}
      */
     NameAnonymizer.prototype.anonymizeElement = function(element, replacement) {
-        var node   = this.findFirstNonEmptyTextNode(element),
-            name   = node.textContent.trim(),
-            value  = replacement ? replacement : this.chance.name(),
-            prefix = node.textContent.match(/^\s/) ? ' ' : ''; // Preserve leading whitespace
-            suffix = node.textContent.match(/\s$/) ? ' ' : ''; // Preserve trailing whitespace
+        var content  = this.getContent(element),
+            trimmed  = content.trim(),
+            value    = replacement ? replacement : this.chance.name(),
+            prefix   = content.match(/^\s/) ? ' ' : '', // Preserve leading whitespace
+            suffix   = content.match(/\s$/) ? ' ' : '', // Preserve trailing whitespace
+            mappings;
+
+        // If it's a freeform element, replace all names
+        if(this.isFreeform(element)) {
+            // Sort all the mappings by length so full names get replaced first
+            mappings = _.chain(this.getAllMappings()).pairs().sortBy(function(pair) {
+                return pair[0].length
+            }).map(function(pair) {
+                return {
+                    'original'    : pair[0],
+                    'replacement' : pair[1]
+                };
+            }).value().reverse();
+
+            // Replace freeform content
+            this.setContent(element, mappings.reduce(function(formatted, mapping) {
+                return formatted.replace(
+                    new RegExp(mapping.original, 'ig'),
+                    mapping.replacement
+                );
+            }, content));
+
+            return false;
+        }
 
         // If it has any spaces, assume it's a full name and add a mapping for the first name
-        if(!replacement && name.indexOf(' ')) {
+        if(!replacement && trimmed.indexOf(' ')) {
             this.setMapping(
-                name.split(' ')[0].toLowerCase(),
+                trimmed.split(' ')[0].toLowerCase(),
                 value.split(' ')[0]
             );
         }
 
-        // Update text content
-        node.textContent = prefix + value + suffix;
+        // Exact content
+        this.setContent(element, prefix + value + suffix);
 
         return value;
     };

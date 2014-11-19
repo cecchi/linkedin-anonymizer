@@ -26,6 +26,8 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
             selectors = [
                 'a[href*="://www.linkedin.com/profile/view"] img',
                 'a[href^="/contacts/view"] img',
+                'a[href^="/recruiter/profile"] img',
+                '#topcard .module-body > img',
                 '.new-miniprofile-container img',
                 '.profile-picture img',
                 '.larger-profile-photo img',
