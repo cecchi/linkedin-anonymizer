@@ -32,13 +32,15 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
                 'a[href*="://www.linkedin.com/profile/view"].name',
                 'a[href^="/recruiter/profile"]',
                 '.inside-opinion-request .recipient-name',
+                '.inside-opinion-request .title',
                 '.inside-opinion-request #subject',
                 '.inside-opinion-request #msgBody',
                 '#recruiter-inside-opinion .take-action button',
+                '#recruiter-inside-opinion .module-body > h3',
                 '.name a[href*="://www.linkedin.com/profile/view"]',
                 '.profile-info > h1.searchable',
                 'a[href^="/contacts/view"]',
-                '.search-results h3 .title',
+                '.peopleSearch .given-name',
                 '#notifications .update .name',
                 '.profile-detail .name',
                 '.inbox-item .participants',
@@ -70,9 +72,17 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
      * @retunr  {Boolean}
      */
     NameAnonymizer.prototype.isFreeform = function(element) {
-        var id = element.getAttribute('id');
+        var id      = element.getAttribute('id'),
+            tag     = element.tagName.toLowerCase(),
+            classes = element.getAttribute('class') || '';
 
-        return id === 'subject' || id === 'msgBody' || element.tagName.toLowerCase() === 'button';
+        classes = classes.trim();
+
+        return id === 'subject' ||
+               id === 'msgBody' ||
+               tag === 'button' ||
+               tag === 'title'  ||
+               tag === 'h3';
     };
 
     /**
