@@ -1,4 +1,4 @@
-linkedin-anonymizer
-===================
+INcognito
+=========
 
 Obfuscate sensitive member data on LinkedIn.com

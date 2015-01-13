@@ -1,5 +1,5 @@
 {
-  "name": "linkedin-anonymizer",
+  "name": "incognito",
   "version": "0.0.0",
   "description": "Obfuscate sensitive member data on LinkedIn.com",
   "main": "build/content.js",
