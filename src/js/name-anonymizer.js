@@ -30,11 +30,21 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
             selectors = [
                 'a[href*="://www.linkedin.com/profile/view"][href$="name"]:not(.title):not([data-trk$="title"])',
                 'a[href*="://www.linkedin.com/profile/view"].name',
-                'a[href^="/recruiter/profile"]',
+                'a[href^="/recruiter/profile"]:not(.page-link)',
+                'a[href^="/cap/people/show"]',
+                '.connection-path .overlaps .overlap',
+                '.connection-path button.action-contact',
                 '.inside-opinion-request .recipient-name',
                 '.inside-opinion-request .title',
                 '.inside-opinion-request #subject',
                 '.inside-opinion-request #msgBody',
+                '.messages .template-owner',
+                '.inbox-preview-list .ip-name',
+                '.entity-block.profile h3.name',
+                '.owner .owner-name',
+                '.profile-card-col h3.name a.title',
+                '#callout-overlay td:nth-child(2)',
+                '#shared-profiles p',
                 '#recruiter-inside-opinion .take-action button',
                 '#recruiter-inside-opinion .module-body > h3',
                 '.name a[href*="://www.linkedin.com/profile/view"]',
@@ -42,12 +52,16 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
                 'a[href^="/contacts/view"]',
                 '.peopleSearch .given-name',
                 '#notifications .update .name',
+                '#project-owner p span',
                 '.profile-detail .name',
+                '.who .name',
                 '.inbox-item .participants',
                 '.full-name',
                 '.intermediary-name',
                 '.new-miniprofile-container a',
-                '#sendInMailModal .recipient'
+                '.name .seat-info',
+                '#sendInMailModal .recipient',
+                'title'
             ],
             elements = document.querySelectorAll(selectors.join(','));
 
@@ -76,13 +90,14 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
             tag     = element.tagName.toLowerCase(),
             classes = element.getAttribute('class') || '';
 
-        classes = classes.trim();
+        classes = classes.trim().split(' ');
 
         return id === 'subject' ||
                id === 'msgBody' ||
                tag === 'button' ||
                tag === 'title'  ||
-               tag === 'h3';
+               tag === 'h3'     ||
+               classes.indexOf('overlap') !== -1;
     };
 
     /**
@@ -101,7 +116,13 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
 
         node = node.firstChild;
         while (node) {
-            if(found = this.findFirstNonEmptyTextNode(node)) {
+            try {
+                found = this.findFirstNonEmptyTextNode(node);
+            } catch(e) {
+                found = false;
+            }
+
+            if(found) {
                 return found;
             } else {
                 node = node.nextSibling;
@@ -187,6 +208,8 @@ define(['underscore', 'anonymizer', 'chance', 'names'], function(_, Anonymizer, 
                     'replacement' : pair[1]
                 };
             }).value().reverse();
+
+            element.setAttribute('data-anonymized-freeform', 'data-anonymized-freeform');
 
             // Replace freeform content
             this.setContent(element, mappings.reduce(function(formatted, mapping) {

@@ -22,7 +22,8 @@ define(['anonymizer', 'chance'], function(Anonymizer, Chance) {
     EmailAnonymizer.prototype.identify = function() {
         var self = this,
             selectors = [
-                'dd.email > div'
+                'dd.email > div',
+                '.seat-info .email'
             ],
             elements = document.querySelectorAll(selectors.join(','));
 
